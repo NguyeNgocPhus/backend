@@ -1,6 +1,8 @@
+const { log } = require("npmlog");
 const validator = require("validator");
 const Profile = require("../model/Profile");
 const User = require("../model/User");
+const request = require("request");
 
 // @router GET api/profile/me
 // @decs get current user
@@ -43,7 +45,7 @@ module.exports.createProfile = async (req, res, next) => {
   if (company) profileFields.company = company;
   if (website) profileFields.website = website;
   if (location) profileFields.location = location;
-  if (bio) profileFields.company = bio;
+  if (bio) profileFields.bio = bio;
   if (status) profileFields.status = status;
   if (githubUsername) profileFields.githubUsername = githubUsername;
   if (!skill) {
@@ -94,20 +96,49 @@ module.exports.getAllProfile = async (req, res, next) => {
 // @decs get profile by userID
 // @access public
 module.exports.getProfile = async (req, res, next) => {
+  //console.log(req.params.user_id);
   try {
     const profile = await Profile.findOne({
-      user: req.params.user_id,
+      _id: req.params.user_id,
     }).populate("user", ["name", "avatar"]);
+
     if (!profile) {
-      res.status(400).send("sai cmm");
+      throw new Error("sai r");
     }
-    res.json(profile);
+    res.status(200).json(profile);
   } catch (error) {
     if (error.kind === "ObjectId") {
       return res.status(400).json({ msg: "profile not found" });
     }
-    console.log(error.message);
-    res.send(error.message);
+    console.log(error);
+    const errors = Object.keys(error.errors);
+    const listErr = errors.map((err) => error.errors[err].message);
+
+    res.status(400).json(listErr);
+  }
+};
+
+// @router GET api/profile/github/:username
+// @decs GET profile GitHub
+// @access public
+module.exports.getGitHubRepos = async (req, res, next) => {
+  try {
+    const option = {
+      uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc&&client_id=${process.env.githubClientID}&client_secret=${process.env.githubSecret}`,
+      method: "GET",
+      headers: { "user-agent": "node.js" },
+    };
+    request(option, (err, response, body) => {
+      if (err) {
+        throw new Error(err.message);
+      } else if (response.statusCode !== 200) {
+        res.status(400).send({ msg: "not found" });
+      } else {
+        res.status(200).send(JSON.parse(body));
+      }
+    });
+  } catch (error) {
+    res.status(404).send(error.message);
   }
 };
 

@@ -7,6 +7,7 @@ router.get("/api/profile/me", protect, profileController.me);
 router.post("/api/profile", protect, profileController.createProfile);
 router.get("/api/profile", profileController.getAllProfile);
 router.get("/api/profile/user/:user_id", profileController.getProfile);
+router.get("/api/profile/github/:username", profileController.getGitHubRepos);
 router.delete(
   "/api/profile/user/:user_id",
   protect,
