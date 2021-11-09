@@ -15,7 +15,7 @@ module.exports.createPost = async (req, res, next) => {
       user: req.user._id,
     };
     const post = await Post.create(newPost);
-    res.status(400).send(post);
+    res.status(200).send(post);
   } catch (error) {
     res.status(400).send(error.message);
   }
@@ -27,7 +27,7 @@ module.exports.createPost = async (req, res, next) => {
 module.exports.getAllPosts = async (req, res, next) => {
   try {
     const post = await Post.find();
-    res.status(400).send(post);
+    res.status(200).send(post);
   } catch (error) {
     res.status(400).send(error.message);
   }
@@ -43,7 +43,7 @@ module.exports.getPost = async (req, res, next) => {
     if (!post) {
       throw new Error("id not invalid");
     }
-    res.status(400).send(post);
+    res.status(200).send(post);
   } catch (error) {
     if (error.kind === "ObjectId") {
       return res.status(400).send("post is not found");
@@ -64,7 +64,7 @@ module.exports.deletePost = async (req, res, next) => {
     }
 
     await post.remove();
-    res.status(400).send({ msg: "remove success" });
+    res.status(200).send(post);
   } catch (error) {
     if (error.kind === "ObjectId") {
       return res.status(400).send("post is not found");
@@ -85,15 +85,16 @@ module.exports.likePost = async (req, res, next) => {
     if (!post) {
       throw new Error("dmmmmmmmmmmmmmmmmmmm");
     }
+    const index = post.likes
+      .map((like) => {
+        return like.user.toString();
+      })
+      .indexOf(req.user._id.toString());
 
-    if (
-      post.likes.filter((like) => like.user.toString() !== req.user._id)
-        .length > 0
-    ) {
-      throw new Error("Post already liked");
+    if (index === -1) {
+      post.likes.push({ user: req.user._id });
     }
 
-    post.likes.push({ user: req.user._id });
     await post.save();
     res.status(200).send(post);
   } catch (error) {
@@ -114,18 +115,13 @@ module.exports.UnlikePost = async (req, res, next) => {
       throw new Error("dmmmmmmmmmmmmmmmmmmm");
     }
     // console.log(post, req.user._id);
-    if (
-      post.likes.filter(
-        (like) => like.user.toString() === req.user._id.toString()
-      ).length === 0
-    ) {
-      throw new Error("Post has not yet been liked");
-    }
+
     const removeIndex = post.likes
       .map((like) => like.user.toString())
-      .indexOf(req.user._id);
-
-    post.likes.splice(removeIndex, 1);
+      .indexOf(req.user._id.toString());
+    if (removeIndex !== -1) {
+      post.likes.splice(removeIndex, 1);
+    }
 
     await post.save();
     res.status(200).send(post);

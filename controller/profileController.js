@@ -96,15 +96,11 @@ module.exports.getAllProfile = async (req, res, next) => {
 // @decs get profile by userID
 // @access public
 module.exports.getProfile = async (req, res, next) => {
-  //console.log(req.params.user_id);
   try {
     const profile = await Profile.findOne({
-      _id: req.params.user_id,
+      user: req.params.user_id,
     }).populate("user", ["name", "avatar"]);
 
-    if (!profile) {
-      throw new Error("sai r");
-    }
     res.status(200).json(profile);
   } catch (error) {
     if (error.kind === "ObjectId") {

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const app = require("./app");
+const path = require(" ");
 
 const connectDB = async () => {
   try {
@@ -15,7 +16,15 @@ const connectDB = async () => {
     console.log(error.message);
   }
 };
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("client/build"));
+  app.get("*", (req, res, next) => {
+    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+  });
+}
+
 connectDB();
-app.listen(5000, () => {
-  console.log("connect port 5000");
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
+  console.log(`connect port ${PORT}`);
 });
