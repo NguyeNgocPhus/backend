@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const app = require("./app");
-const path = require(" ");
+const path = require("path");
 
 const connectDB = async () => {
   try {
